@@ -70,7 +70,6 @@ model PostTarget {
   accountId     String
   overrideBody  String? // per-platform text override, falls back to Post.body
   status        TargetStatus  @default(PENDING)
-  jobId         String? // BullMQ job id, for idempotency checks
   externalPostId String? // id returned by the platform once published
   lastError     String?
 

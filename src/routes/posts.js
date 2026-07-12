@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
-import { decryptToken } from "../lib/crypto.js";
 import { getAdapter } from "../adapters/index.js";
-import { enqueuePublishJob } from "../queue/publishQueue.js";
 
 export const postsRouter = Router();
 
@@ -51,12 +49,9 @@ postsRouter.post("/", async (req, res) => {
     include: { targets: true },
   });
 
-  if (scheduledFor) {
-    for (const target of post.targets) {
-      const jobId = await enqueuePublishJob(target.id, scheduledFor);
-      await prisma.postTarget.update({ where: { id: target.id }, data: { jobId } });
-    }
-  }
+  // No queue to push to — the /cron/publish-due endpoint (hit periodically
+  // by an external scheduler) picks up any SCHEDULED post whose time has
+  // come. See README for the free cron-job.org setup.
 
   res.status(201).json({ post });
 });
