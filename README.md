@@ -86,6 +86,18 @@ from this one repo — API and worker — plus Postgres and Redis plugins.
    root URL to use the composer UI and reconnect your accounts against the
    production callback URLs.
 
+### Troubleshooting: "prisma migrate deploy" fails during Build
+
+Nixpacks auto-detects Prisma and, by default, may try to run the migration
+during the **build** phase — where `DATABASE_URL` isn't available yet,
+causing a P1012 validation error. This repo's `nixpacks.toml` and
+`railway.json` fix that by running only `npx prisma generate` at build
+time and moving `npx prisma migrate deploy` to `preDeployCommand`, which
+runs after build with full env vars available. If you still see this
+error, redeploy after pulling the latest `nixpacks.toml`/`railway.json`,
+or manually trigger a redeploy from the Railway dashboard to pick up the
+config change.
+
 ## Adding a new platform later
 
 1. Create `src/adapters/yourPlatformAdapter.js` implementing `PlatformAdapter`.
