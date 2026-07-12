@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Social Poster</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #1a1a1a; }
+    h1 { font-size: 1.4rem; }
+    textarea { width: 100%; min-height: 100px; padding: 10px; font-size: 1rem; box-sizing: border-box; }
+    .accounts label { display: block; margin: 6px 0; }
+    button { padding: 8px 16px; font-size: 0.95rem; cursor: pointer; margin-top: 10px; }
+    .connect-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 20px; }
+    .connect-row a { padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; text-decoration: none; color: #333; font-size: 0.85rem; }
+    #status { margin-top: 16px; font-size: 0.9rem; white-space: pre-wrap; }
+    small { color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Social Poster — composer (dev)</h1>
+
+  <p><small>Connect accounts, then compose a post below. This is a bare-bones
+  test harness, not the final UI.</small></p>
+
+  <div class="connect-row" id="connect-row"></div>
+
+  <form id="composer">
+    <textarea id="body" placeholder="What do you want to post?"></textarea>
+    <div class="accounts" id="account-list"><small>Loading connected accounts…</small></div>
+    <label>
+      Schedule for (leave blank to save as draft):
+      <input type="datetime-local" id="scheduledFor" />
+    </label>
+    <br />
+    <button type="submit">Save post</button>
+  </form>
+
+  <div id="status"></div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+
+    async function loadPlatforms() {
+      const { platforms } = await fetch("/accounts/platforms").then(r => r.json());
+      const row = document.getElementById("connect-row");
+      row.innerHTML = platforms
+        .map(p => `<a href="/accounts/${p.toLowerCase()}/connect">Connect ${p}</a>`)
+        .join("");
+    }
+
+    async function loadAccounts() {
+      const { accounts } = await fetch("/accounts").then(r => r.json());
+      const list = document.getElementById("account-list");
+      if (!accounts.length) {
+        list.innerHTML = "<small>No accounts connected yet — use the buttons above.</small>";
+        return;
+      }
+      list.innerHTML = accounts
+        .map(
+          a => `<label><input type="checkbox" name="account" value="${a.id}" /> ${a.platform} — ${a.displayName}</label>`
+        )
+        .join("");
+    }
+
+    document.getElementById("composer").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const body = document.getElementById("body").value;
+      const scheduledFor = document.getElementById("scheduledFor").value || null;
+      const accountIds = [...document.querySelectorAll('input[name="account"]:checked')].map(el => el.value);
+
+      if (!accountIds.length) {
+        statusEl.textContent = "Select at least one connected account.";
+        return;
+      }
+
+      const res = await fetch("/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body, mediaUrls: [], scheduledFor, accountIds }),
+      });
+      const data = await res.json();
+      statusEl.textContent = res.ok
+        ? `Saved: ${data.post.status} (id ${data.post.id})`
+        : `Error: ${JSON.stringify(data, null, 2)}`;
+    });
+
+    loadPlatforms();
+    loadAccounts();
+  </script>
+</body>
+</html>

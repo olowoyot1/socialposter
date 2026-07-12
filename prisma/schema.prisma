@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  TWITTER
+  INSTAGRAM
+  FACEBOOK
+  LINKEDIN
+  TIKTOK
+  YOUTUBE
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHING
+  DONE
+}
+
+enum TargetStatus {
+  PENDING
+  QUEUED
+  SUCCESS
+  FAILED
+}
+
+// A connected account on a given platform (personal use = single user,
+// but modeled so multi-user is a small extension later).
+model Account {
+  id            String    @id @default(uuid())
+  platform      Platform
+  displayName   String
+  externalId    String // the platform's user/page id
+  accessToken   String // encrypted at rest, see src/lib/crypto.js
+  refreshToken  String?
+  tokenExpires  DateTime?
+  metadata      Json? // e.g. Facebook Page id needed for IG publishing
+  createdAt     DateTime  @default(now())
+
+  targets PostTarget[]
+
+  @@unique([platform, externalId])
+}
+
+// A single composed post, before it's split per-platform.
+model Post {
+  id            String     @id @default(uuid())
+  body          String
+  mediaUrls     String[] // uploaded media, already resized per-platform if needed
+  status        PostStatus @default(DRAFT)
+  scheduledFor  DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  targets PostTarget[]
+}
+
+// One platform-specific delivery of a post (a post can target several accounts).
+model PostTarget {
+  id            String        @id @default(uuid())
+  post          Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId        String
+  account       Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId     String
+  overrideBody  String? // per-platform text override, falls back to Post.body
+  status        TargetStatus  @default(PENDING)
+  jobId         String? // BullMQ job id, for idempotency checks
+  externalPostId String? // id returned by the platform once published
+  lastError     String?
+
+  attempts PublishAttempt[]
+
+  @@index([status])
+}
+
+// Audit log: every publish attempt, success or failure.
+model PublishAttempt {
+  id            String     @id @default(uuid())
+  target        PostTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  targetId      String
+  attemptedAt   DateTime   @default(now())
+  success       Boolean
+  errorMessage  String?
+  responseData  Json?
+}
