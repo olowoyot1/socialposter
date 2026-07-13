@@ -1,8 +1,5 @@
 {
   "rewrites": [
-    { "source": "/accounts/:path*", "destination": "/api/index" },
-    { "source": "/posts/:path*", "destination": "/api/index" },
-    { "source": "/cron/:path*", "destination": "/api/index" },
-    { "source": "/health", "destination": "/api/index" }
+    { "source": "/(.*)", "destination": "/api/index" }
   ]
 }
