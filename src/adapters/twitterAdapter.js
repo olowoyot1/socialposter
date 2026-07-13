@@ -3,10 +3,6 @@ import { PlatformAdapter } from "./PlatformAdapter.js";
 
 const CHAR_LIMIT = 280;
 
-// In-memory PKCE verifier store keyed by state, for the OAuth handshake.
-// Fine for a personal single-user tool; swap for Redis if you add multi-user.
-const pendingAuth = new Map();
-
 export class TwitterAdapter extends PlatformAdapter {
   static platformKey = "TWITTER";
 
@@ -23,14 +19,13 @@ export class TwitterAdapter extends PlatformAdapter {
       process.env.TWITTER_CALLBACK_URL,
       { scope: ["tweet.read", "tweet.write", "users.read", "offline.access"], state }
     );
-    pendingAuth.set(state, codeVerifier);
-    return url;
+    // Caller (accounts.js) persists codeVerifier in the DB and passes it
+    // back into handleOAuthCallback — see PlatformAdapter.js for why.
+    return { url, verifier: codeVerifier };
   }
 
-  async handleOAuthCallback({ code, state }) {
-    const codeVerifier = pendingAuth.get(state);
-    pendingAuth.delete(state);
-    if (!codeVerifier) throw new Error("Missing or expired OAuth state");
+  async handleOAuthCallback({ code }, codeVerifier) {
+    if (!codeVerifier) throw new Error("Missing or expired OAuth verifier");
 
     const client = this.#client();
     const {

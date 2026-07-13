@@ -17,10 +17,10 @@ export class TikTokAdapter extends PlatformAdapter {
       redirect_uri: process.env.TIKTOK_CALLBACK_URL,
       state,
     });
-    return `https://www.tiktok.com/v2/auth/authorize/?${params}`;
+    return { url: `https://www.tiktok.com/v2/auth/authorize/?${params}` };
   }
 
-  async handleOAuthCallback({ code }) {
+  async handleOAuthCallback({ code }, verifier) {
     // TODO: POST to https://open.tiktokapis.com/v2/oauth/token/
     throw new Error("TikTokAdapter.handleOAuthCallback not implemented yet");
   }

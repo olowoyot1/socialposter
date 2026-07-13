@@ -18,10 +18,10 @@ export class FacebookAdapter extends PlatformAdapter {
       scope: "pages_manage_posts,pages_read_engagement,pages_show_list",
       response_type: "code",
     });
-    return `https://www.facebook.com/v20.0/dialog/oauth?${params}`;
+    return { url: `https://www.facebook.com/v20.0/dialog/oauth?${params}` };
   }
 
-  async handleOAuthCallback({ code }) {
+  async handleOAuthCallback({ code }, verifier) {
     // TODO: exchange code -> user token -> Page access token (Pages have
     // their own long-lived tokens, separate from the user's).
     throw new Error("FacebookAdapter.handleOAuthCallback not implemented yet");

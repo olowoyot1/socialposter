@@ -17,10 +17,10 @@ export class YouTubeAdapter extends PlatformAdapter {
       scope: "https://www.googleapis.com/auth/youtube.upload",
       state,
     });
-    return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+    return { url: `https://accounts.google.com/o/oauth2/v2/auth?${params}` };
   }
 
-  async handleOAuthCallback({ code }) {
+  async handleOAuthCallback({ code }, verifier) {
     // TODO: POST to https://oauth2.googleapis.com/token
     throw new Error("YouTubeAdapter.handleOAuthCallback not implemented yet");
   }

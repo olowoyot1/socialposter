@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Platform {
@@ -28,6 +29,17 @@ enum TargetStatus {
   QUEUED
   SUCCESS
   FAILED
+}
+
+// Short-lived rows that survive the OAuth round trip on serverless
+// platforms (Vercel), where in-memory Maps don't persist between requests
+// because /connect and /callback can hit different function instances.
+model OAuthState {
+  id           String   @id @default(uuid())
+  state        String   @unique
+  platform     Platform
+  codeVerifier String?
+  createdAt    DateTime @default(now())
 }
 
 // A connected account on a given platform (personal use = single user,

@@ -14,10 +14,10 @@ export class LinkedInAdapter extends PlatformAdapter {
       state,
       scope: "w_member_social,r_liteprofile",
     });
-    return `https://www.linkedin.com/oauth/v2/authorization?${params}`;
+    return { url: `https://www.linkedin.com/oauth/v2/authorization?${params}` };
   }
 
-  async handleOAuthCallback({ code }) {
+  async handleOAuthCallback({ code }, verifier) {
     // TODO: POST to https://www.linkedin.com/oauth/v2/accessToken with
     // grant_type=authorization_code, then GET /v2/me for the member URN.
     throw new Error("LinkedInAdapter.handleOAuthCallback not implemented yet");

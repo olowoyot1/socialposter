@@ -21,10 +21,10 @@ export class InstagramAdapter extends PlatformAdapter {
       scope: "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement",
       response_type: "code",
     });
-    return `https://www.facebook.com/v20.0/dialog/oauth?${params}`;
+    return { url: `https://www.facebook.com/v20.0/dialog/oauth?${params}` };
   }
 
-  async handleOAuthCallback({ code }) {
+  async handleOAuthCallback({ code }, verifier) {
     // TODO: exchange `code` for a short-lived token, then a long-lived token,
     // then look up the Page -> connected Instagram Business Account id.
     // See: https://developers.facebook.com/docs/instagram-api/getting-started

@@ -11,7 +11,11 @@ export class PlatformAdapter {
   /**
    * Build the URL the user is redirected to in order to grant access.
    * @param {string} state - CSRF/state token to round-trip through OAuth.
-   * @returns {string} authorization URL
+   * @returns {{url: string, verifier?: string}} authorization URL, plus a
+   *   PKCE verifier (or any other per-attempt secret) if the platform needs
+   *   one. The caller persists `verifier` in the DB (not memory — this must
+   *   survive across separate serverless invocations) and hands it back to
+   *   handleOAuthCallback.
    */
   getAuthUrl(state) {
     throw new Error("getAuthUrl not implemented");
@@ -21,9 +25,10 @@ export class PlatformAdapter {
    * Exchange the OAuth callback params for tokens, and return the fields
    * needed to create an Account row.
    * @param {object} params - query params from the OAuth redirect
+   * @param {string|null} verifier - the value returned from getAuthUrl, if any
    * @returns {Promise<{externalId: string, displayName: string, accessToken: string, refreshToken?: string, tokenExpires?: Date, metadata?: object}>}
    */
-  async handleOAuthCallback(params) {
+  async handleOAuthCallback(params, verifier) {
     throw new Error("handleOAuthCallback not implemented");
   }
 
