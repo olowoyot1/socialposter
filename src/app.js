@@ -15,3 +15,5 @@ app.use("/posts", postsRouter);
 app.use("/cron", cronRouter);
 
 app.get("/health", (req, res) => res.json({ ok: true }));
+
+export default app;
